@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/animation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:recipeshare/home.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   runApp(const MyApp());
@@ -30,16 +34,19 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
-   late AnimationController _animationController;
+  late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   String _msg = "";
   final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _usernameupController = TextEditingController();
-    final TextEditingController _passwordupController = TextEditingController();
-    final TextEditingController _fullNameupController = TextEditingController();
-    final TextEditingController _confirmPasswordController = TextEditingController();
-
+  final TextEditingController _passwordupController = TextEditingController();
+  final TextEditingController _fullNameupController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  File? _profileImage;
+  String? _profileImageName;
+  Uint8List? _profileImageBytes;
 
   @override
   void initState() {
@@ -110,13 +117,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               controller: _usernameController,
                               decoration: InputDecoration(
                                 labelText: 'Username',
-                                prefixIcon: Icon(Icons.person, color: Color(0xFFFF6B6B)),
+                                prefixIcon: Icon(Icons.person,
+                                    color: Color(0xFFFF6B6B)),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Color(0xFFFF6B6B), width: 2),
+                                  borderSide: BorderSide(
+                                      color: Color(0xFFFF6B6B), width: 2),
                                 ),
                               ),
                             ),
@@ -125,13 +134,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               controller: _passwordController,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: Icon(Icons.lock, color: Color(0xFFFF6B6B)),
+                                prefixIcon:
+                                    Icon(Icons.lock, color: Color(0xFFFF6B6B)),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Color(0xFFFF6B6B), width: 2),
+                                  borderSide: BorderSide(
+                                      color: Color(0xFFFF6B6B), width: 2),
                                 ),
                               ),
                               obscureText: true,
@@ -139,10 +150,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             SizedBox(height: 24),
                             ElevatedButton(
                               onPressed: logIn,
-                              child: Text('Login', style: TextStyle(fontSize: 18)),
+                              child:
+                                  Text('Login', style: TextStyle(fontSize: 18)),
                               style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white, backgroundColor: Color(0xFFFF6B6B),
-                                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                                foregroundColor: Colors.white,
+                                backgroundColor: Color(0xFFFF6B6B),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 50, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
@@ -163,12 +177,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ),
                     SizedBox(height: 24),
                     TextButton(
-    onPressed: _showRegisterDialog,
-    child: Text(
-      'New user? Register here',
-      style: TextStyle(color: const Color.fromARGB(235, 45, 0, 0), fontSize: 16),
-    ),
-  ),
+                      onPressed: _showRegisterDialog,
+                      child: Text(
+                        'New user? Register here',
+                        style: TextStyle(
+                            color: const Color.fromARGB(235, 45, 0, 0),
+                            fontSize: 16),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -188,7 +204,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: Colors.black45,
       transitionDuration: Duration(milliseconds: 300),
-      pageBuilder: (BuildContext buildContext, Animation animation, Animation secondaryAnimation) {
+      pageBuilder: (BuildContext buildContext, Animation animation,
+          Animation secondaryAnimation) {
         return SlideTransition(
           position: _slideAnimation,
           child: Dialog(
@@ -222,13 +239,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     ),
                   ),
                   SizedBox(height: 20),
-                  _buildTextField(icon: Icons.person, label: 'Full Name', controller: _fullNameupController),
+                  _buildTextField(
+                      icon: Icons.person,
+                      label: 'Full Name',
+                      controller: _fullNameupController),
                   SizedBox(height: 15),
-                  _buildTextField(icon: Icons.account_circle, label: 'Username', controller: _usernameupController),
+                  _buildTextField(
+                      icon: Icons.account_circle,
+                      label: 'Username',
+                      controller: _usernameupController),
                   SizedBox(height: 15),
-                  _buildTextField(icon: Icons.lock, label: 'Password', isPassword: true, controller: _passwordupController),
+                  _buildTextField(
+                      icon: Icons.lock,
+                      label: 'Password',
+                      isPassword: true,
+                      controller: _passwordupController),
                   SizedBox(height: 15),
-                  _buildTextField(icon: Icons.lock_outline, label: 'Confirm Password', isPassword: true, controller: _confirmPasswordController),
+                  _buildTextField(
+                      icon: Icons.lock_outline,
+                      label: 'Confirm Password',
+                      isPassword: true,
+                      controller: _confirmPasswordController),
+                  SizedBox(height: 15),
+                  _buildImagePicker(),
                   SizedBox(height: 25),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -288,7 +321,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildButton({required String label, required VoidCallback onPressed, required bool isPrimary}) {
+  Widget _buildButton(
+      {required String label,
+      required VoidCallback onPressed,
+      required bool isPrimary}) {
     return ElevatedButton(
       onPressed: onPressed,
       child: Text(label, style: TextStyle(fontSize: 16)),
@@ -304,22 +340,66 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildImagePicker() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.grey[200],
+        backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+        child: _profileImage == null
+            ? Icon(Icons.camera_alt, size: 40, color: Color(0xFFFF6B6B))
+            : null,
+      ),
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _profileImageName = image.name;
+      });
+      if (kIsWeb) {
+        _profileImageBytes = await image.readAsBytes();
+      } else {
+        _profileImage = File(image.path);
+      }
+      setState(() {});
+    }
+  }
+
   void register() async {
     String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
 
-    final Map<String, dynamic> queryParams = {
-      "operation": "register",
-      "json": jsonEncode({
-        "username": _usernameupController.text,
-        "password": _passwordupController.text,
-        "fullname": _fullNameupController.text, // Changed from _fullNameController to _usernameController
-      }),
-    };
+    var request = http.MultipartRequest('POST', Uri.parse(url));
+    request.fields['operation'] = 'register';
+    request.fields['username'] = _usernameupController.text;
+    request.fields['password'] = _passwordupController.text;
+    request.fields['fullname'] = _fullNameupController.text;
+
+    if (_profileImageBytes != null || _profileImage != null) {
+      if (kIsWeb) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'profile_image',
+          _profileImageBytes!,
+          filename: _profileImageName,
+        ));
+      } else {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profile_image',
+          _profileImage!.path,
+        ));
+      }
+    }
 
     try {
-      http.Response response = await http.get(Uri.parse(url).replace(queryParameters: queryParams));
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
       if (response.statusCode == 200) {
-        int result = jsonDecode(response.body);
+        var result = jsonDecode(response.body);
         if (result == 1) {
           setState(() {
             _msg = "Registration successful!";
@@ -341,29 +421,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
-   void logIn() async {
+  void logIn() async {
+    // Check if username or password is empty
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _msg = "Please enter both username and password";
+      });
+      return;
+    }
+
     String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
 
-    final Map<String, dynamic> queryParams = {
+    final Map<String, String> body = {
       "operation": "login",
-      "json": jsonEncode({
-        "username": _usernameController.text,
-        "password": _passwordController.text,
-      }),
+      "username": _usernameController.text,
+      "password": _passwordController.text,
     };
 
     try {
-      http.Response response = await http.get(Uri.parse(url).replace(queryParameters: queryParams));
-      if (response.statusCode == 200) {
-        List<dynamic> resultList = jsonDecode(response.body);
+      http.Response response = await http.post(Uri.parse(url), body: body);
 
-        if (resultList.isNotEmpty) {
-          var result = resultList[0];
-          String fullName = result["fullname"];
-          // Navigate to HomePage and pass the fullName
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        if (data.isNotEmpty) {
+          int userId = data[0]['user_id'];
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => HomePage(fullName: fullName),
+              builder: (context) => HomePage(userId: userId),
             ),
           );
         } else {
@@ -382,6 +466,4 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       });
     }
   }
-
-
 }
