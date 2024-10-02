@@ -18,7 +18,7 @@ class User
         return json_encode($returnvalue);
     }
 
-    function register($data, $files)
+    function register($data, $file)
     {
         include "connection.php";
         
@@ -27,18 +27,38 @@ class User
         $fullname = $data['fullname'];
         $profile_image = '';
     
-        if (isset($files['profile_image'])) {
+        // Handle file upload
+        if (isset($file['profile_image'])) {
             $target_dir = "../assets/images/";
-            if (!file_exists($target_dir)) {
-                mkdir($target_dir, 0777, true);
-            }
-            $target_file = $target_dir . basename($files["profile_image"]["name"]);
+            $file_name = basename($file["profile_image"]["name"]);
+            $target_file = $target_dir . $file_name;
             $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-            $newFileName = uniqid() . '.' . $imageFileType;
-            $target_file = $target_dir . $newFileName;
-    
-            if (move_uploaded_file($files["profile_image"]["tmp_name"], $target_file)) {
-                $profile_image = "images/" . $newFileName;
+
+            // Check if image file is a actual image or fake image
+            $check = getimagesize($file["profile_image"]["tmp_name"]);
+            if($check === false) {
+                return json_encode(['success' => false, 'message' => "File is not an image."]);
+            }
+
+            // Check file size
+            if ($file["profile_image"]["size"] > 500000) {
+                return json_encode(['success' => false, 'message' => "Sorry, your file is too large."]);
+            }
+
+            // Allow certain file formats
+            if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+            && $imageFileType != "gif" ) {
+                return json_encode(['success' => false, 'message' => "Sorry, only JPG, JPEG, PNG & GIF files are allowed."]);
+            }
+
+            // Generate a unique filename
+            $new_file_name = uniqid() . '.' . $imageFileType;
+            $target_file = $target_dir . $new_file_name;
+
+            if (move_uploaded_file($file["profile_image"]["tmp_name"], $target_file)) {
+                $profile_image = "images/" . $new_file_name;
+            } else {
+                return json_encode(['success' => false, 'message' => "Sorry, there was an error uploading your file."]);
             }
         }
     
@@ -49,10 +69,12 @@ class User
         $stmt->bindParam(":password", $password);
         $stmt->bindParam(":fullname", $fullname);
         $stmt->bindParam(":profile_image", $profile_image);
-        $stmt->execute();
-        $returnvalue = $stmt->rowCount() > 0 ? 1 : 0;
-        unset($conn); unset($stmt);
-        return json_encode($returnvalue);
+        
+        if ($stmt->execute()) {
+            return json_encode(['success' => true, 'message' => 'Registration successful']);
+        } else {
+            return json_encode(['success' => false, 'message' => 'Registration failed']);
+        }
     }
 }
 

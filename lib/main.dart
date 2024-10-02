@@ -8,6 +8,8 @@ import 'package:recipeshare/home.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'package:recipeshare/theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,9 +46,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final TextEditingController _fullNameupController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  File? _profileImage;
-  String? _profileImageName;
-  Uint8List? _profileImageBytes;
+  File? _profileImageFile;
+  final picker = ImagePicker();
 
   @override
   void initState() {
@@ -78,7 +79,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFFF6B6B), Color(0xFFF7FFF7)],
+            colors: [AppTheme.primaryColor, AppTheme.accentColor],
           ),
         ),
         child: SafeArea(
@@ -341,33 +342,80 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.grey[200],
-        backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-        child: _profileImage == null
-            ? Icon(Icons.camera_alt, size: 40, color: Color(0xFFFF6B6B))
-            : null,
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      leading: Icon(Icons.photo_library),
+                      title: Text('Choose from Gallery'),
+                      onTap: () {
+                        getImage(ImageSource.gallery);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.photo_camera),
+                      title: Text('Take a Photo'),
+                      onTap: () {
+                        getImage(ImageSource.camera);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        child: Container(
+          width: 150,
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: _profileImageFile != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: kIsWeb
+                      ? Image.network(
+                          _profileImageFile!.path,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.file(
+                          _profileImageFile!,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
+                        ),
+                )
+              : Icon(
+                  Icons.add_a_photo,
+                  size: 50,
+                  color: Theme.of(context).primaryColor,
+                ),
+        ),
       ),
     );
   }
 
-  Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _profileImageName = image.name;
-      });
-      if (kIsWeb) {
-        _profileImageBytes = await image.readAsBytes();
-      } else {
-        _profileImage = File(image.path);
+  Future getImage(ImageSource source) async {
+    final pickedFile = await picker.pickImage(source: source);
+
+    setState(() {
+      if (pickedFile != null) {
+        _profileImageFile = File(pickedFile.path);
       }
-      setState(() {});
-    }
+    });
   }
 
   void register() async {
@@ -379,39 +427,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     request.fields['password'] = _passwordupController.text;
     request.fields['fullname'] = _fullNameupController.text;
 
-    if (_profileImageBytes != null || _profileImage != null) {
+    if (_profileImageFile != null) {
       if (kIsWeb) {
+        Uint8List imageBytes = await _profileImageFile!.readAsBytes();
         request.files.add(http.MultipartFile.fromBytes(
           'profile_image',
-          _profileImageBytes!,
-          filename: _profileImageName,
+          imageBytes,
+          filename: 'profile_image.jpg',
         ));
       } else {
         request.files.add(await http.MultipartFile.fromPath(
           'profile_image',
-          _profileImage!.path,
+          _profileImageFile!.path,
         ));
       }
     }
 
     try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+      var response = await request.send();
+      var responseData = await response.stream.toBytes();
+      var result = json.decode(String.fromCharCodes(responseData));
 
-      if (response.statusCode == 200) {
-        var result = jsonDecode(response.body);
-        if (result == 1) {
-          setState(() {
-            _msg = "Registration successful!";
-          });
-        } else {
-          setState(() {
-            _msg = "Registration failed";
-          });
-        }
+      if (response.statusCode == 200 && result['success']) {
+        setState(() {
+          _msg = "Registration successful!";
+        });
       } else {
         setState(() {
-          _msg = "Error: ${response.statusCode}";
+          _msg = "Registration failed: ${result['message']}";
         });
       }
     } catch (error) {
@@ -430,7 +473,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
-    String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+       String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
 
     final Map<String, String> body = {
       "operation": "login",
@@ -439,7 +482,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     };
 
     try {
-      http.Response response = await http.post(Uri.parse(url), body: body);
+      http.Response response = await http.post(
+  Uri.parse(url),
+  headers: {"Content-Type": "application/x-www-form-urlencoded"},
+  body: body
+);
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
