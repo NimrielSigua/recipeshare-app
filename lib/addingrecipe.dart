@@ -290,6 +290,7 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
 
       var request = http.MultipartRequest(
         'POST',
+        // Uri.parse('http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php'),
         Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
       );
 

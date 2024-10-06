@@ -123,21 +123,32 @@ class User
     {
         include "connection.php";
 
-        $sql = "SELECT r.user_id, r.recipe_id, r.recipe_name, r.description, r.recipe_image, r.cooking_time, r.ingredients, r.mealtype, 
-                u.username, u.fullname, u.profile_image,
-                GROUP_CONCAT(cs.steps ORDER BY cs.cookingsteps_id SEPARATOR '||') as steps
-                FROM recipestbl r
-                LEFT JOIN cookingstepstbl cs ON r.recipe_id = cs.recipe_id
-                JOIN users u ON r.user_id = u.user_id
-                GROUP BY r.user_id, r.recipe_id, r.recipe_name, r.description, r.recipe_image, r.cooking_time, r.ingredients, r.mealtype, u.username, u.fullname, u.profile_image
-                ORDER BY r.recipe_id DESC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute();
-        $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        unset($conn); unset($stmt);
-        return json_encode($recipes);
+        try {
+            $sql = "SELECT r.*, u.username, u.fullname, u.profile_image,
+                    GROUP_CONCAT(cs.steps ORDER BY cs.cookingsteps_id SEPARATOR '||') as steps,
+                    (SELECT rating
+                     FROM ratingtbl rt
+                     WHERE rt.recipe_id = r.recipe_id
+                     GROUP BY rating
+                     ORDER BY COUNT(*) DESC, rating DESC
+                     LIMIT 1) as most_common_rating,
+                    (SELECT COUNT(*)
+                     FROM ratingtbl rt
+                     WHERE rt.recipe_id = r.recipe_id) as total_ratings
+                    FROM recipestbl r
+                    LEFT JOIN cookingstepstbl cs ON r.recipe_id = cs.recipe_id
+                    JOIN users u ON r.user_id = u.user_id
+                    GROUP BY r.recipe_id, r.user_id, r.recipe_name, r.description, r.recipe_image, r.cooking_time, r.ingredients, r.mealtype, u.username, u.fullname, u.profile_image
+                    ORDER BY r.recipe_id DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return json_encode($recipes);
+        } catch (Exception $e) {
+            return json_encode(['error' => $e->getMessage()]);
+        }
     }
 
     function followUnfollowUser($followerId, $followedId)
@@ -221,14 +232,26 @@ class User
         include "connection.php";
 
         try {
-            $sql = "SELECT r.*, u.username, u.fullname, u.profile_image 
+            $sql = "SELECT r.*, u.username, u.fullname, u.profile_image,
+                    GROUP_CONCAT(cs.steps ORDER BY cs.cookingsteps_id SEPARATOR '||') as steps,
+                    (SELECT rating
+                     FROM ratingtbl rt
+                     WHERE rt.recipe_id = r.recipe_id
+                     GROUP BY rating
+                     ORDER BY COUNT(*) DESC, rating DESC
+                     LIMIT 1) as most_common_rating,
+                    (SELECT COUNT(*)
+                     FROM ratingtbl rt
+                     WHERE rt.recipe_id = r.recipe_id) as total_ratings
                     FROM recipestbl r 
                     JOIN users u ON r.user_id = u.user_id 
+                    LEFT JOIN cookingstepstbl cs ON r.recipe_id = cs.recipe_id
                     WHERE r.user_id IN (
                         SELECT followed_id 
                         FROM followers 
                         WHERE follower_id = :user_id
                     )
+                    GROUP BY r.recipe_id
                     ORDER BY r.recipe_id DESC";
             
             $stmt = $conn->prepare($sql);
@@ -237,10 +260,84 @@ class User
 
             $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Always return an array, even if it's empty
             return json_encode($recipes);
         } catch (Exception $e) {
             return json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    function addRatingAndComment($recipeId, $userId, $rating, $comment)
+    {
+        include "connection.php";
+
+        try {
+            // Start a transaction
+            $conn->beginTransaction();
+
+            // Check if the user has already rated this recipe
+            $checkSql = "SELECT * FROM ratingtbl WHERE recipe_id = :recipe_id AND user_id = :user_id";
+            $checkStmt = $conn->prepare($checkSql);
+            $checkStmt->bindParam(':recipe_id', $recipeId);
+            $checkStmt->bindParam(':user_id', $userId);
+            $checkStmt->execute();
+
+            if ($checkStmt->rowCount() > 0) {
+                // Update existing rating
+                $sql = "UPDATE ratingtbl SET rating = :rating, comment = :comment WHERE recipe_id = :recipe_id AND user_id = :user_id";
+            } else {
+                // Insert new rating
+                $sql = "INSERT INTO ratingtbl (recipe_id, user_id, rating, comment) VALUES (:recipe_id, :user_id, :rating, :comment)";
+            }
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':recipe_id', $recipeId);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->bindParam(':rating', $rating);
+            $stmt->bindParam(':comment', $comment);
+            $stmt->execute();
+
+            // Commit the transaction
+            $conn->commit();
+
+            // Get the average rating for the recipe
+            $avgSql = "SELECT AVG(rating) as avg_rating FROM ratingtbl WHERE recipe_id = :recipe_id";
+            $avgStmt = $conn->prepare($avgSql);
+            $avgStmt->bindParam(':recipe_id', $recipeId);
+            $avgStmt->execute();
+            $avgRating = $avgStmt->fetch(PDO::FETCH_ASSOC)['avg_rating'];
+
+            return json_encode([
+                'success' => true, 
+                'message' => 'Rating and comment added successfully',
+                'average_rating' => round($avgRating, 1)
+            ]);
+        } catch (Exception $e) {
+            // An error occurred; rollback the transaction
+            $conn->rollBack();
+            return json_encode(['success' => false, 'message' => 'Failed to add rating and comment: ' . $e->getMessage()]);
+        }
+    }
+
+    function getRatingsAndComments($recipeId)
+    {
+        include "connection.php";
+
+        try {
+            $sql = "SELECT r.rating_id, r.user_id, r.rating, r.comment, u.username, u.profile_image 
+                    FROM ratingtbl r
+                    JOIN users u ON r.user_id = u.user_id
+                    WHERE r.recipe_id = :recipe_id
+                    ORDER BY r.rating_id DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':recipe_id', $recipeId);
+            $stmt->execute();
+
+            $ratings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return json_encode(['success' => true, 'ratings' => $ratings]);
+        } catch (Exception $e) {
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 }
@@ -270,6 +367,9 @@ try {
             case "getFollowingRecipes":
                 echo $user->getFollowingRecipes($_GET['user_id']);
                 break;
+            case "getRatingsAndComments":
+                echo $user->getRatingsAndComments($_GET['recipe_id']);
+                break;
             default:
                 echo json_encode(["error" => "Invalid operation"]);
                 break;
@@ -283,6 +383,9 @@ try {
                 break;
             case "followUnfollowUser":
                 echo $user->followUnfollowUser($_POST['follower_id'], $_POST['followed_id']);
+                break;
+            case "addRatingAndComment":
+                echo $user->addRatingAndComment($_POST['recipe_id'], $_POST['user_id'], $_POST['rating'], $_POST['comment']);
                 break;
             default:
                 echo json_encode(["error" => "Invalid operation"]);

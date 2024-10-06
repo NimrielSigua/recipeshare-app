@@ -45,6 +45,7 @@ class _VisitPageState extends State<VisitPage> {
     }
     
     final response = await http.get(Uri.parse(
+        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
         'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
@@ -63,6 +64,7 @@ class _VisitPageState extends State<VisitPage> {
     }
     
     final response = await http.get(Uri.parse(
+        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
         'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
@@ -77,6 +79,7 @@ class _VisitPageState extends State<VisitPage> {
 
   Future<void> checkFollowStatus() async {
     final response = await http.get(Uri.parse(
+        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
         'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
@@ -98,6 +101,7 @@ class _VisitPageState extends State<VisitPage> {
     }
 
     final response = await http.post(
+      // Uri.parse('http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php'),
       Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
       body: {
         'operation': 'followUnfollowUser',

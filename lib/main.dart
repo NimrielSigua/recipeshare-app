@@ -420,6 +420,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   void register() async {
     String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+    // String url = "http://192.168.155.63/recipeapp/recipeshare/api/aut.php";
 
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.fields['operation'] = 'register';
@@ -473,6 +474,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
+      //  String url = "http://192.168.155.63/recipeapp/recipeshare/api/aut.php";
        String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
 
     final Map<String, String> body = {
