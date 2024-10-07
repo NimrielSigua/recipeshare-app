@@ -406,7 +406,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
               child: Image.asset(
-                'assets/images/${recipe['recipe_image'] ?? 'default_image.jpg'}',
+                '/images/${recipe['recipe_image'] ?? 'default_image.jpg'}',
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -711,7 +711,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                   children: [
                     CircleAvatar(
                       backgroundImage: rating['profile_image'] != null
-                          ? AssetImage('assets/${rating['profile_image']}')
+                          ? AssetImage('/${rating['profile_image']}')
                           : null,
                       child: rating['profile_image'] == null
                           ? Text(rating['username'][0].toUpperCase())
@@ -865,7 +865,7 @@ class _FollowingRecipesTabState extends State<FollowingRecipesTab> {
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
               child: Image.asset(
-                'assets/images/${recipe['recipe_image'] ?? 'default_image.jpg'}',
+                '/images/${recipe['recipe_image'] ?? 'default_image.jpg'}',
                 height: 120,
                 width: double.infinity,
                 fit: BoxFit.cover,

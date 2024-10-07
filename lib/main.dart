@@ -10,14 +10,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'package:recipeshare/theme.dart';
-
+ 
 void main() {
   runApp(const MyApp());
 }
-
+ 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,14 +27,14 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
+ 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
-
+ 
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-
+ 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -48,7 +48,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       TextEditingController();
   File? _profileImageFile;
   final picker = ImagePicker();
-
+  Uint8List? _webImageBytes;
+ 
   @override
   void initState() {
     super.initState();
@@ -64,13 +65,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       curve: Curves.easeOut,
     ));
   }
-
+ 
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -195,10 +196,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
   }
-
+ 
   void _showRegisterDialog() {
     _animationController.forward();
-
+ 
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -297,7 +298,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       },
     );
   }
-
+ 
   Widget _buildTextField({
     required IconData icon,
     required String label,
@@ -321,7 +322,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
   }
-
+ 
   Widget _buildButton(
       {required String label,
       required VoidCallback onPressed,
@@ -340,7 +341,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
   }
-
+ 
   Widget _buildImagePicker() {
     return Center(
       child: GestureDetector(
@@ -381,12 +382,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             color: Colors.grey[200],
             borderRadius: BorderRadius.circular(10),
           ),
-          child: _profileImageFile != null
+          child: _profileImageFile != null || _webImageBytes != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: kIsWeb
-                      ? Image.network(
-                          _profileImageFile!.path,
+                      ? Image.memory(
+                          _webImageBytes!,
                           width: 150,
                           height: 150,
                           fit: BoxFit.cover,
@@ -407,48 +408,54 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
     );
   }
-
+ 
   Future getImage(ImageSource source) async {
     final pickedFile = await picker.pickImage(source: source);
-
+ 
     setState(() {
       if (pickedFile != null) {
-        _profileImageFile = File(pickedFile.path);
+        if (kIsWeb) {
+          pickedFile.readAsBytes().then((value) {
+            _webImageBytes = value;
+          });
+        } else {
+          _profileImageFile = File(pickedFile.path);
+        }
       }
     });
   }
-
+ 
   void register() async {
     String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
-    // String url = "http://192.168.155.63/recipeapp/recipeshare/api/aut.php";
-
+ 
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.fields['operation'] = 'register';
     request.fields['username'] = _usernameupController.text;
     request.fields['password'] = _passwordupController.text;
     request.fields['fullname'] = _fullNameupController.text;
-
-    if (_profileImageFile != null) {
-      if (kIsWeb) {
-        Uint8List imageBytes = await _profileImageFile!.readAsBytes();
+ 
+    if (kIsWeb) {
+      if (_webImageBytes != null) {
         request.files.add(http.MultipartFile.fromBytes(
           'profile_image',
-          imageBytes,
+          _webImageBytes!,
           filename: 'profile_image.jpg',
         ));
-      } else {
+      }
+    } else {
+      if (_profileImageFile != null) {
         request.files.add(await http.MultipartFile.fromPath(
           'profile_image',
           _profileImageFile!.path,
         ));
       }
     }
-
+ 
     try {
       var response = await request.send();
       var responseData = await response.stream.toBytes();
       var result = json.decode(String.fromCharCodes(responseData));
-
+ 
       if (response.statusCode == 200 && result['success']) {
         setState(() {
           _msg = "Registration successful!";
@@ -464,7 +471,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       });
     }
   }
-
+ 
   void logIn() async {
     // Check if username or password is empty
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -473,27 +480,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       });
       return;
     }
-
-      //  String url = "http://192.168.155.63/recipeapp/recipeshare/api/aut.php";
-       String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
-
+ 
+    String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+ 
     final Map<String, String> body = {
       "operation": "login",
       "username": _usernameController.text,
       "password": _passwordController.text,
     };
-
+ 
     try {
-      http.Response response = await http.post(
-  Uri.parse(url),
-  headers: {"Content-Type": "application/x-www-form-urlencoded"},
-  body: body
-);
-
+      http.Response response = await http.post(Uri.parse(url),
+          headers: {"Content-Type": "application/x-www-form-urlencoded"},
+          body: body);
+ 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data.isNotEmpty) {
-          int userId = data[0]['user_id'];
+          // Convert the user_id to int
+          int userId = int.parse(data[0]['user_id'].toString());
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => HomePage(userId: userId),

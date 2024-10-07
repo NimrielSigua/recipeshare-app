@@ -146,7 +146,7 @@ class _VisitPageState extends State<VisitPage> {
                 CircleAvatar(
                   radius: 40,
                   backgroundImage: widget.profileImage != null
-                      ? AssetImage('assets/${widget.profileImage}')
+                      ? AssetImage('${widget.profileImage}')
                       : null,
                   child: widget.profileImage == null ? Icon(Icons.person, size: 40) : null,
                 ),
