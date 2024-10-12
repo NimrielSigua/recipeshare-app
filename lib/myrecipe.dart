@@ -30,7 +30,8 @@ class _MyRecipesPageState extends State<MyRecipesPage> {
     try {
       final response = await http.get(Uri.parse(
           // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
-          'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+          'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+          // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -56,6 +57,7 @@ class _MyRecipesPageState extends State<MyRecipesPage> {
         backgroundColor: AppTheme.primaryColor,
         elevation: 0,
       ),
+      
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
           : _recipes.isEmpty
@@ -220,7 +222,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _fetchRatingsAndComments() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -426,7 +429,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
         body: {
           'operation': 'addRatingAndComment',
           'recipe_id': widget.recipe['recipe_id'].toString(),

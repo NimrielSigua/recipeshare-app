@@ -340,6 +340,23 @@ class User
             return json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+    function getFollowingCount($userId)
+    {
+        include "connection.php";
+
+        try {
+            $sql = "SELECT COUNT(*) as following_count FROM followers WHERE follower_id = :user_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return json_encode(['following_count' => $result['following_count']]);
+        } catch (Exception $e) {
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }
 
 $user = new User();
@@ -369,6 +386,9 @@ try {
                 break;
             case "getRatingsAndComments":
                 echo $user->getRatingsAndComments($_GET['recipe_id']);
+                break;
+            case "getFollowingCount":
+                echo $user->getFollowingCount($_GET['user_id']);
                 break;
             default:
                 echo json_encode(["error" => "Invalid operation"]);

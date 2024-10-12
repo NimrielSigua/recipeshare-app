@@ -77,10 +77,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppTheme.primaryColor, AppTheme.accentColor],
+          image: DecorationImage(
+            image: AssetImage('images/loginbg.jpeg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.5),
+              BlendMode.darken,
+            ),
           ),
         ),
         child: SafeArea(
@@ -91,83 +94,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'RecipeShare',
-                      style: GoogleFonts.pacifico(
-                        fontSize: 48,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 10.0,
-                            color: Colors.black.withOpacity(0.3),
-                            offset: Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildLogo(),
                     SizedBox(height: 50),
-                    Card(
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            TextField(
-                              controller: _usernameController,
-                              decoration: InputDecoration(
-                                labelText: 'Username',
-                                prefixIcon: Icon(Icons.person,
-                                    color: Color(0xFFFF6B6B)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Color(0xFFFF6B6B), width: 2),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            TextField(
-                              controller: _passwordController,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon:
-                                    Icon(Icons.lock, color: Color(0xFFFF6B6B)),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Color(0xFFFF6B6B), width: 2),
-                                ),
-                              ),
-                              obscureText: true,
-                            ),
-                            SizedBox(height: 24),
-                            ElevatedButton(
-                              onPressed: logIn,
-                              child:
-                                  Text('Login', style: TextStyle(fontSize: 18)),
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Color(0xFFFF6B6B),
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 50, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    _buildLoginCard(),
                     SizedBox(height: 16),
                     Text(
                       _msg,
@@ -178,20 +107,126 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                     ),
                     SizedBox(height: 24),
-                    TextButton(
-                      onPressed: _showRegisterDialog,
-                      child: Text(
-                        'New user? Register here',
-                        style: TextStyle(
-                            color: const Color.fromARGB(235, 45, 0, 0),
-                            fontSize: 16),
-                      ),
-                    ),
+                    _buildRegisterButton(),
                   ],
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+ 
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        Icon(
+          Icons.restaurant_menu,
+          size: 80,
+          color: Colors.white,
+        ),
+        SizedBox(height: 16),
+        Text(
+          'RecipeShare',
+          style: GoogleFonts.pacifico(
+            fontSize: 48,
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                blurRadius: 10.0,
+                color: Colors.black.withOpacity(0.3),
+                offset: Offset(2, 2),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Discover, Share, and Cook Together',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
+          ),
+        ),
+      ],
+    );
+  }
+ 
+  Widget _buildLoginCard() {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            _buildTextField(
+              controller: _usernameController,
+              icon: Icons.person,
+              label: 'Username',
+            ),
+            SizedBox(height: 16),
+            _buildTextField(
+              controller: _passwordController,
+              icon: Icons.lock,
+              label: 'Password',
+              isPassword: true,
+            ),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: logIn,
+              child: Text('Login', style: TextStyle(fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.primaryColor,
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+ 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String label,
+    bool isPassword = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+        ),
+      ),
+    );
+  }
+ 
+  Widget _buildRegisterButton() {
+    return TextButton(
+      onPressed: _showRegisterDialog,
+      child: Text(
+        'New to RecipeShare? Join our cooking community!',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -212,114 +247,97 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           position: _slideAnimation,
           child: Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
             ),
-            elevation: 0,
+            elevation: 8,
             backgroundColor: Colors.transparent,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.rectangle,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10.0,
-                    offset: const Offset(0.0, 10.0),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Join RecipeShare',
-                    style: GoogleFonts.pacifico(
-                      fontSize: 24,
-                      color: Color(0xFFFF6B6B),
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Join RecipeShare',
+                      style: GoogleFonts.pacifico(
+                        fontSize: 28,
+                        color: AppTheme.primaryColor,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  _buildTextField(
+                    SizedBox(height: 8),
+                    Text(
+                      'Start your culinary journey today!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    _buildTextField(
                       icon: Icons.person,
                       label: 'Full Name',
-                      controller: _fullNameupController),
-                  SizedBox(height: 15),
-                  _buildTextField(
+                      controller: _fullNameupController,
+                    ),
+                    SizedBox(height: 16),
+                    _buildTextField(
                       icon: Icons.account_circle,
                       label: 'Username',
-                      controller: _usernameupController),
-                  SizedBox(height: 15),
-                  _buildTextField(
+                      controller: _usernameupController,
+                    ),
+                    SizedBox(height: 16),
+                    _buildTextField(
                       icon: Icons.lock,
                       label: 'Password',
                       isPassword: true,
-                      controller: _passwordupController),
-                  SizedBox(height: 15),
-                  _buildTextField(
+                      controller: _passwordupController,
+                    ),
+                    SizedBox(height: 16),
+                    _buildTextField(
                       icon: Icons.lock_outline,
                       label: 'Confirm Password',
                       isPassword: true,
-                      controller: _confirmPasswordController),
-                  SizedBox(height: 15),
-                  _buildImagePicker(),
-                  SizedBox(height: 25),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildButton(
-                        label: 'Cancel',
-                        onPressed: () {
-                          _animationController.reverse().then((_) {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        isPrimary: false,
+                      controller: _confirmPasswordController,
+                    ),
+                    SizedBox(height: 24),
+                    _buildImagePicker(),
+                    SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        register();
+                        _animationController.reverse().then((_) {
+                          Navigator.of(context).pop();
+                        });
+                      },
+                      child: Text('Join Now', style: TextStyle(fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primaryColor,
+                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
-                      _buildButton(
-                        label: 'Register',
-                        onPressed: () {
-                          register();
-                          // Implement registration logic here
-                          _animationController.reverse().then((_) {
-                            Navigator.of(context).pop();
-                          });
-                        },
-                        isPrimary: true,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        _animationController.reverse().then((_) {
+                          Navigator.of(context).pop();
+                        });
+                      },
+                      child: Text('Cancel', style: TextStyle(fontSize: 16, color: AppTheme.primaryColor)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
-    );
-  }
- 
-  Widget _buildTextField({
-    required IconData icon,
-    required String label,
-    bool isPassword = false,
-    required TextEditingController controller, // Add this line
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        controller: controller, // Add this line
-        obscureText: isPassword,
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Color(0xFFFF6B6B)),
-          labelText: label,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        ),
-      ),
     );
   }
  
@@ -426,7 +444,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
  
   void register() async {
-    String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+    // String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+    String url = "http://10.0.0.57/recipeapp/recipeshare/api/aut.php";
  
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.fields['operation'] = 'register';
@@ -481,7 +500,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
  
-    String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+    // String url = "http://localhost/recipeapp/recipeshare/api/aut.php";
+    String url = "http://10.0.0.57/recipeapp/recipeshare/api/aut.php";
  
     final Map<String, String> body = {
       "operation": "login",

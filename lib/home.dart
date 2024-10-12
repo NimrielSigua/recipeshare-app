@@ -29,6 +29,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   List<dynamic> filteredRecipes = [];
   TextEditingController searchController = TextEditingController();
   int followerCount = 0;
+  int followingCount = 0;
+  bool isLoading = true; // Loading state variable
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     fetchUserInfo();
     fetchAllRecipes();
     fetchFollowerCount();
+    fetchFollowingCount();
   }
 
   @override
@@ -48,7 +51,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Future<void> fetchUserInfo() async {
     final response = await http.get(Uri.parse(
         // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
-        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
+        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
+        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -64,12 +68,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Future<void> fetchAllRecipes() async {
     final response = await http.get(Uri.parse(
-        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
+        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
+        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
 
     if (response.statusCode == 200) {
       setState(() {
         allRecipes = json.decode(response.body);
         filteredRecipes = allRecipes;
+        isLoading = false; // Set loading to false after data is fetched
       });
     } else {
       print('Failed to load recipes');
@@ -79,7 +85,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Future<void> fetchFollowerCount() async {
     final response = await http.get(Uri.parse(
         // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
-        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+    //    'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -88,6 +95,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       });
     } else {
       print('Failed to load follower count');
+    }
+  }
+
+  Future<void> fetchFollowingCount() async {
+    final response = await http.get(Uri.parse(
+        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
+
+    if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+            followingCount = data['following_count']; // Assuming you have a followingCount variable
+        });
+    } else {
+        print('Failed to load following count');
     }
   }
 
@@ -127,210 +148,36 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Recipe Share', style: AppTheme.logoStyle.copyWith(fontSize: 24)),
-        backgroundColor: AppTheme.primaryColor,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'All Recipes'),
-            Tab(text: 'Following'),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('images/loginbg.jpeg'), // Add a background image
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.3),
+              BlendMode.darken,
+            ),
+          ),
         ),
-      ),
-      drawer: Drawer(
-        child: Container(
-          color: AppTheme.backgroundColor,
+        child: SafeArea(
           child: Column(
             children: [
-              Container(
-                height: 230,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Theme.of(context).primaryColor, Color(0xFFF7FFF7)],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              _buildAppBar(),
+              _buildTabs(),
+              Expanded(
+                child: isLoading // Check if loading
+                    ? Center(child: CircularProgressIndicator()) // Show loading indicator
+                    : TabBarView(
+                        controller: _tabController,
                         children: [
-                          Padding(
-                            padding: EdgeInsets.all(20),
-                            child: Text(
-                              "RecipeShare",
-                              style: GoogleFonts.pacifico(
-                                fontSize: 24,
-                                color: const Color(0xFFFF6B6B),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Padding(
-                                padding: EdgeInsets.all(20),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 45,
-                                      backgroundColor: Colors.white,
-                                      child: profileImageUrl != null &&
-                                              profileImageUrl!.isNotEmpty
-                                          ? ClipOval(
-                                              child: Image.asset(
-                                                '$profileImageUrl',
-                                                height: 90,
-                                                width: 90,
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (context, error, stackTrace) {
-                                                  return Container(
-                                                    height: 90,
-                                                    width: 90,
-                                                    color: Colors.grey[300],
-                                                    child: Center(
-                                                      child: Icon(Icons.error,
-                                                          color: Colors.red),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            )
-                                          : Icon(Icons.person,
-                                              size: 45, color: Color(0xFFFF6B6B)),
-                                    ),
-                                    SizedBox(width: 15),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            fullname ?? 'User',
-                                            style: GoogleFonts.firaSans(
-                                              color: Colors.white,
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            '@${username ?? 'User'}',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Row(
-                                            children: [
-                                              Text("Followers: $followerCount", style: TextStyle(color: Colors.white)),
-                                              SizedBox(width: 10.0,),
-                                              Text("Likes: 30", style: TextStyle(color: Colors.white))
-                                            ],
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                          _buildAllRecipesTab(),
+                          FollowingRecipesTab(userId: widget.userId),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.home, color: Color(0xFFFF6B6B)),
-                      title: Text('Home', style: TextStyle(fontSize: 16)),
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.book, color: Color(0xFFFF6B6B)),
-                      title: Text('My Recipes', style: TextStyle(fontSize: 16)),
-                      onTap: () {
-                        Navigator.pop(context); // Close the drawer
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MyRecipesPage(userId: widget.userId),
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(),
-                    ListTile(
-                      leading: Icon(Icons.settings, color: Color(0xFFFF6B6B)),
-                      title: Text('Settings', style: TextStyle(fontSize: 16)),
-                      onTap: () {
-                        // TODO: Implement Settings page navigation
-                        Navigator.pop(context);
-                      },
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.help, color: Color(0xFFFF6B6B)),
-                      title:
-                          Text('Help & Feedback', style: TextStyle(fontSize: 16)),
-                      onTap: () {
-                        // TODO: Implement Help & Feedback page navigation
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                child: Align(
-                  alignment: FractionalOffset.bottomCenter,
-                  child: Container(
-                    child: Column(
-                      children: <Widget>[
-                        Divider(),
-                        ListTile(
-                          leading: Icon(Icons.logout, color: Color(0xFFFF6B6B)),
-                          title: Text('Logout', style: TextStyle(fontSize: 16)),
-                          onTap: () {
-                            _handleLogout();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAllRecipesTab(),
-          FollowingRecipesTab(userId: widget.userId),
-        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -341,9 +188,162 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           );
         },
         child: Icon(Icons.add),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: AppTheme.primaryColor,
         tooltip: 'Add Recipe',
       ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'RecipeShare',
+            style: GoogleFonts.pacifico(
+              fontSize: 28,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 10.0,
+                  color: Colors.black.withOpacity(0.3),
+                  offset: Offset(2, 2),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.menu, color: Colors.white),
+            onSelected: (value) {
+              switch (value) {
+                case 'profile':
+                  _showProfileDialog();
+                  break;
+                case 'myRecipes':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MyRecipesPage(userId: widget.userId),
+                    ),
+                  );
+                  break;
+                case 'settings':
+                  // TODO: Implement settings page navigation
+                  break;
+                case 'help':
+                  // TODO: Implement help page navigation
+                  break;
+                case 'logout':
+                  _handleLogout();
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'profile',
+                child: ListTile(
+                  leading: Icon(Icons.person),
+                  title: Text('Profile'),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'myRecipes',
+                child: ListTile(
+                  leading: Icon(Icons.book),
+                  title: Text('My Recipes'),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: ListTile(
+                  leading: Icon(Icons.settings),
+                  title: Text('Settings'),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'help',
+                child: ListTile(
+                  leading: Icon(Icons.help),
+                  title: Text('Help & Feedback'),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Logout'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TabBar(
+        controller: _tabController,
+        indicator: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          color: AppTheme.primaryColor,
+        ),
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white70,
+        tabs: [
+          Tab(text: 'All Recipes'),
+          Tab(text: 'Following'),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                    ? AssetImage(profileImageUrl!)
+                    : null,
+                child: profileImageUrl == null || profileImageUrl!.isEmpty
+                    ? Icon(Icons.person, size: 50)
+                    : null,
+              ),
+              SizedBox(height: 16),
+              Text(
+                fullname ?? 'User',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              Text('@${username ?? 'User'}'),
+              SizedBox(height: 8),
+              Text('Followers: $followerCount'),
+              Text('Following: $followingCount'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -356,10 +356,21 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             controller: searchController,
             decoration: InputDecoration(
               hintText: 'Search recipes, users, or meal types...',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear, color: AppTheme.primaryColor),
+                onPressed: () {
+                  searchController.clear();
+                  filterRecipes(''); // Clear the search
+                },
+              ),
+              filled: true,
+              fillColor: Colors.white, // Background color for the search bar
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none, // Remove border
               ),
+              contentPadding: EdgeInsets.symmetric(vertical: 15), // Increase padding
             ),
             onChanged: filterRecipes,
           ),
@@ -547,7 +558,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _fetchRatingsAndComments() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -753,7 +765,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
         body: {
           'operation': 'addRatingAndComment',
           'recipe_id': widget.recipe['recipe_id'].toString(),
@@ -805,7 +818,8 @@ class _FollowingRecipesTabState extends State<FollowingRecipesTab> {
 
   Future<void> fetchFollowingRecipes() async {
     final response = await http.get(Uri.parse(
-        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
+        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
+        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

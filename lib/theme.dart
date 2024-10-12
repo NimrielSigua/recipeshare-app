@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFFFF6B6B);
-  static const Color accentColor = Color(0xFFFFA5A5);
-  static const Color backgroundColor = Color(0xFFFFF0F0);
-  static const Color textColor = Color(0xFF333333);
+  static const Color primaryColor = Colors.black;
+  static const Color accentColor = Colors.white;
+  static const Color backgroundColor = Colors.black;
+  static const Color textColor = Colors.white;
 
   static final ThemeData theme = ThemeData(
     primaryColor: primaryColor,
@@ -13,7 +13,7 @@ class AppTheme {
     appBarTheme: AppBarTheme(
       backgroundColor: primaryColor,
       elevation: 0,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: accentColor),
     ),
     textTheme: GoogleFonts.poppinsTextTheme().apply(
       bodyColor: textColor,
@@ -21,8 +21,8 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.white,
-        backgroundColor: primaryColor,
+        foregroundColor: primaryColor,
+        backgroundColor: accentColor,
         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
@@ -31,7 +31,8 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: accentColor,
+      hintStyle: TextStyle(color: primaryColor.withOpacity(0.6)),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -42,23 +43,41 @@ class AppTheme {
       ),
     ),
     cardTheme: CardTheme(
-      color: Colors.white,
+      color: accentColor,
       elevation: 5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
-    ), colorScheme: ColorScheme.fromSwatch().copyWith(secondary: accentColor),
+    ),
+    colorScheme: ColorScheme.fromSwatch().copyWith(secondary: accentColor),
   );
 
   static TextStyle get logoStyle => GoogleFonts.pacifico(
-        fontSize: 48,
-        color: Colors.white,
-        shadows: [
-          Shadow(
-            blurRadius: 10.0,
-            color: Colors.black.withOpacity(0.3),
-            offset: Offset(2, 2),
-          ),
-        ],
-      );
+    fontSize: 48,
+    color: accentColor,
+    shadows: [
+      Shadow(
+        blurRadius: 10.0,
+        color: primaryColor.withOpacity(0.3),
+        offset: Offset(2, 2),
+      ),
+    ],
+  );
+
+  static TextStyle get headingStyle => GoogleFonts.poppins(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: textColor,
+  );
+
+  static TextStyle get subheadingStyle => GoogleFonts.poppins(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: textColor,
+  );
+
+  static TextStyle get bodyTextStyle => GoogleFonts.poppins(
+    fontSize: 16,
+    color: textColor,
+  );
 }
