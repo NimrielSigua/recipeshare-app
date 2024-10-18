@@ -51,8 +51,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Future<void> fetchUserInfo() async {
     final response = await http.get(Uri.parse(
         // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
+        // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
+        // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserInfo&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -68,8 +69,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Future<void> fetchAllRecipes() async {
     final response = await http.get(Uri.parse(
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
+        // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
+        // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getAllRecipes'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -85,8 +87,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Future<void> fetchFollowerCount() async {
     final response = await http.get(Uri.parse(
         // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
-    //    'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+        // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+        // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+       'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -100,7 +103,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Future<void> fetchFollowingCount() async {
     final response = await http.get(Uri.parse(
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
+        // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
+        // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -558,8 +563,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _fetchRatingsAndComments() async {
     try {
       final response = await http.get(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        // Uri.parse('http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        // Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -765,8 +771,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       final response = await http.post(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php'),
         body: {
           'operation': 'addRatingAndComment',
           'recipe_id': widget.recipe['recipe_id'].toString(),
@@ -818,8 +825,9 @@ class _FollowingRecipesTabState extends State<FollowingRecipesTab> {
 
   Future<void> fetchFollowingRecipes() async {
     final response = await http.get(Uri.parse(
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
+        // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
+        // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

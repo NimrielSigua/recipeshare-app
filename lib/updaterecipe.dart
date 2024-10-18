@@ -5,25 +5,25 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
-
 import 'package:recipeshare/theme.dart';
 
-class AddingRecipePage extends StatefulWidget {
+class UpdateRecipePage extends StatefulWidget {
+  final Map<String, dynamic> recipe;
   final int userId;
 
-  const AddingRecipePage({Key? key, required this.userId}) : super(key: key);
+  const UpdateRecipePage({Key? key, required this.recipe, required this.userId}) : super(key: key);
 
   @override
-  _AddingRecipePageState createState() => _AddingRecipePageState();
+  _UpdateRecipePageState createState() => _UpdateRecipePageState();
 }
 
-class _AddingRecipePageState extends State<AddingRecipePage> {
+class _UpdateRecipePageState extends State<UpdateRecipePage> {
   final _formKey = GlobalKey<FormState>();
   final _recipeName = TextEditingController();
   final _ingredients = TextEditingController();
   final _cookingTime = TextEditingController();
   final _description = TextEditingController();
-  List<TextEditingController> _steps = [TextEditingController()];
+  List<TextEditingController> _steps = [];
   File? _imageFile;
   Uint8List? _webImage;
   final picker = ImagePicker();
@@ -36,6 +36,27 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
     'tea': false,
     'supper': false,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the fields with the existing recipe data
+    _recipeName.text = widget.recipe['recipe_name'];
+    _ingredients.text = widget.recipe['ingredients'];
+    _cookingTime.text = widget.recipe['cooking_time'];
+    _description.text = widget.recipe['description'];
+
+    // Initialize steps using '||' as a separator
+    String stepsString = widget.recipe['steps'];
+    _steps = stepsString.split('||').map((step) => TextEditingController(text: step)).toList();
+
+    // Initialize meal types based on the existing recipe
+    String mealTypesString = widget.recipe['mealtype']; // Get the mealtype string
+    List<String> mealTypes = mealTypesString.split(','); // Split by comma
+    for (var type in mealTypes) {
+      _mealTypes[type.trim()] = true; // Trim whitespace and set to true
+    }
+  }
 
   Future<void> getImage(ImageSource source) async {
     final pickedFile = await picker.pickImage(source: source);
@@ -60,7 +81,7 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add New Recipe', style: AppTheme.logoStyle.copyWith(fontSize: 24)),
+        title: Text('Update Recipe', style: AppTheme.logoStyle.copyWith(fontSize: 24)),
         backgroundColor: AppTheme.primaryColor,
       ),
       body: Container(
@@ -112,9 +133,10 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
                 Center(
                   child: ElevatedButton(
                     onPressed: _submitForm,
-                    child: Text('Save Recipe'),
+                    child: Text('Update Recipe'),
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white, backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      backgroundColor: AppTheme.primaryColor,
                     ),
                   ),
                 ),
@@ -183,11 +205,21 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
                           fit: BoxFit.cover,
                         ),
                 )
-              : Icon(
-                  Icons.add_a_photo,
-                  size: 50,
-                  color: Theme.of(context).primaryColor,
-                ),
+              : (widget.recipe['recipe_image'] != null && widget.recipe['recipe_image'].isNotEmpty)
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        '/images/${widget.recipe['recipe_image']}', // Update with your actual asset path
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Icon(
+                      Icons.add_a_photo,
+                      size: 50,
+                      color: Theme.of(context).primaryColor,
+                    ),
         ),
       ),
     );
@@ -281,22 +313,14 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      if (_imageFile == null && _webImage == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select an image for the recipe')),
-        );
-        return;
-      }
-
+      // Create the multipart request
       var request = http.MultipartRequest(
         'POST',
-        // Uri.parse('http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php'),
-        // Uri.parse('http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php'),
-        // Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
         Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
       );
 
-      request.fields['operation'] = 'addRecipe';
+      request.fields['operation'] = 'editRecipe'; // Use the editRecipe operation
+      request.fields['recipe_id'] = widget.recipe['recipe_id'].toString();
       request.fields['recipe_name'] = _recipeName.text;
       request.fields['cooking_time'] = _cookingTime.text;
       request.fields['ingredients'] = _ingredients.text;
@@ -305,29 +329,35 @@ class _AddingRecipePageState extends State<AddingRecipePage> {
       request.fields['mealtype'] = jsonEncode(_mealTypes.entries.where((entry) => entry.value).map((entry) => entry.key).toList());
       request.fields['steps'] = jsonEncode(_steps.map((controller) => controller.text).toList());
 
+      // Check if a new image is being uploaded
       if (kIsWeb) {
-        request.files.add(http.MultipartFile.fromBytes(
-          'recipe_image',
-          _webImage!,
-          filename: 'recipe_image.jpg',
-        ));
+        if (_webImage != null) {
+          request.files.add(http.MultipartFile.fromBytes(
+            'recipe_image',
+            _webImage!,
+            filename: 'recipe_image.jpg',
+          ));
+        }
       } else {
-        var file = await http.MultipartFile.fromPath('recipe_image', _imageFile!.path);
-        request.files.add(file);
+        if (_imageFile != null) {
+          var file = await http.MultipartFile.fromPath('recipe_image', _imageFile!.path);
+          request.files.add(file);
+        }
       }
 
+      // Send the request
       var response = await request.send();
       var responseData = await response.stream.toBytes();
       var result = json.decode(String.fromCharCodes(responseData));
 
       if (response.statusCode == 200 && result['success']) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Recipe added successfully')),
+          SnackBar(content: Text('Recipe updated successfully')),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Pass true to indicate success
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add recipe: ${result['message']}')),
+          SnackBar(content: Text('Failed to update recipe: ${result['message']}')),
         );
       }
     }

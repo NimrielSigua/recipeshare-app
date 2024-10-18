@@ -5,6 +5,7 @@ import 'package:recipeshare/addingrecipe.dart';
 import 'package:recipeshare/theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:recipeshare/updaterecipe.dart';
 
 class MyRecipesPage extends StatefulWidget {
   final int userId;
@@ -30,8 +31,9 @@ class _MyRecipesPageState extends State<MyRecipesPage> {
     try {
       final response = await http.get(Uri.parse(
           // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
-          'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
-          // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+          // 'http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+          // 'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+          'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
 
       if (response.statusCode == 200) {
         setState(() {
@@ -133,65 +135,65 @@ class _MyRecipesPageState extends State<MyRecipesPage> {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => RecipeDetailPage(recipe: recipe, currentUserId: widget.userId)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-              child: Image.asset(
-                'images/${recipe['recipe_image']}',
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey[500]),
-                ),
-              ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RecipeDetailPage(recipe: recipe, currentUserId: widget.userId)),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recipe['recipe_name'],
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  child: Image.asset(
+                    'images/${recipe['recipe_image']}',
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.grey[300],
+                      child: Icon(Icons.broken_image, size: 50, color: Colors.grey[500]),
                     ),
-                    SizedBox(height: 2),
-                    Expanded(
-                      child: Text(
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recipe['recipe_name'],
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2),
+                      Text(
                         recipe['description'],
                         style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 14, color: AppTheme.primaryColor),
-                        SizedBox(width: 2),
-                        Text(
-                          recipe['cooking_time'],
-                          style: TextStyle(fontSize: 11, color: AppTheme.primaryColor),
-                        ),
-                      ],
-                    ),
-                  ],
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 14, color: AppTheme.primaryColor),
+                          SizedBox(width: 2),
+                          Text(
+                            recipe['cooking_time'],
+                            style: TextStyle(fontSize: 11, color: AppTheme.primaryColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -214,16 +216,15 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Map<String, dynamic>? _userRating;
 
   @override
-  void initState() {
-    super.initState();
-    _fetchRatingsAndComments();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchRatingsAndComments(); // Fetch data every time the page is displayed
   }
 
   Future<void> _fetchRatingsAndComments() async {
     try {
       final response = await http.get(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -253,6 +254,26 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       appBar: AppBar(
         title: Text(widget.recipe['recipe_name'] ?? 'Recipe Details', style: AppTheme.logoStyle.copyWith(fontSize: 20)),
         backgroundColor: AppTheme.primaryColor,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              // Navigate to the update recipe page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UpdateRecipePage(
+                    recipe: widget.recipe, // Pass the recipe data
+                    userId: widget.currentUserId, // Pass the userId as well
+                  ),
+                ),
+              ).then((_) {
+                // Reload the data after returning from the update page
+                _fetchRatingsAndComments();
+              });
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -342,7 +363,6 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           ],
         ),
       ),
-
     );
   }
 
@@ -429,8 +449,9 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       final response = await http.post(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://192.168.95.63/recipeapp/recipeshare/api/accfuntionality.php'),
+        // Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
         body: {
           'operation': 'addRatingAndComment',
           'recipe_id': widget.recipe['recipe_id'].toString(),

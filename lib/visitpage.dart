@@ -41,6 +41,18 @@ class _VisitPageState extends State<VisitPage> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fetch data again when the page is displayed
+    fetchUserRecipes();
+    fetchFollowerCount();
+    fetchFollowingCount();
+    if (widget.currentUserId != widget.userId) {
+      checkFollowStatus();
+    }
+  }
+
   Future<void> fetchUserRecipes() async {
     if (widget.userId == null) {
       print('User ID is null');
@@ -48,9 +60,7 @@ class _VisitPageState extends State<VisitPage> {
     }
     
     final response = await http.get(Uri.parse(
-        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getUserRecipes&user_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
       setState(() {
@@ -68,9 +78,7 @@ class _VisitPageState extends State<VisitPage> {
     }
     
     final response = await http.get(Uri.parse(
-        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowerCount&user_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -84,9 +92,7 @@ class _VisitPageState extends State<VisitPage> {
 
   Future<void> checkFollowStatus() async {
     final response = await http.get(Uri.parse(
-        // 'http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
-        // 'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=checkFollowStatus&follower_id=${widget.currentUserId}&followed_id=${widget.userId}'));
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -107,9 +113,7 @@ class _VisitPageState extends State<VisitPage> {
     }
 
     final response = await http.post(
-      // Uri.parse('http://192.168.155.63/recipeapp/recipeshare/api/accfuntionality.php'),
-      // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
-      Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
+      Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
       body: {
         'operation': 'followUnfollowUser',
         'follower_id': widget.currentUserId.toString(),
@@ -140,7 +144,7 @@ class _VisitPageState extends State<VisitPage> {
 
   Future<void> fetchFollowingCount() async {
     final response = await http.get(Uri.parse(
-        'http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
+        'http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getFollowingCount&user_id=${widget.userId}'));
 
     if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -380,8 +384,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   Future<void> _fetchRatingsAndComments() async {
     try {
       final response = await http.get(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php?operation=getRatingsAndComments&recipe_id=${widget.recipe['recipe_id']}'),
       );
 
       if (response.statusCode == 200) {
@@ -467,8 +470,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
 
     try {
       final response = await http.post(
-        // Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
-        Uri.parse('http://10.0.0.57/recipeapp/recipeshare/api/accfuntionality.php'),
+        Uri.parse('http://localhost/recipeapp/recipeshare/api/accfuntionality.php'),
         body: {
           'operation': 'addRatingAndComment',
           'recipe_id': widget.recipe['recipe_id'].toString(),
